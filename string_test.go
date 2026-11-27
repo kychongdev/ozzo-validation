@@ -100,7 +100,7 @@ func TestGetErrorFieldName(t *testing.T) {
 		T1 string `json:"t1"`
 		T2 string `json:"t2,omitempty"`
 		T3 string `json:",omitempty"`
-		T4 string `json:"t4,x1,omitempty"`
+		T4 string `json:"t4,string,omitempty"`
 	}
 	tests := []struct {
 		tag   string
@@ -113,7 +113,7 @@ func TestGetErrorFieldName(t *testing.T) {
 		{"t4", "T3", "T3"},
 		{"t5", "T4", "t4"},
 	}
-	a := reflect.TypeOf(A{})
+	a := reflect.TypeFor[A]()
 	for _, test := range tests {
 		field, _ := a.FieldByName(test.field)
 		assert.Equal(t, test.name, getErrorFieldName(&field), test.tag)

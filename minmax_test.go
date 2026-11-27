@@ -19,9 +19,9 @@ func TestMin(t *testing.T) {
 
 	tests := []struct {
 		tag       string
-		threshold interface{}
+		threshold any
 		exclusive bool
-		value     interface{}
+		value     any
 		err       string
 	}{
 		// int cases
@@ -83,9 +83,9 @@ func TestMax(t *testing.T) {
 
 	tests := []struct {
 		tag       string
-		threshold interface{}
+		threshold any
 		exclusive bool
-		value     interface{}
+		value     any
 		err       string
 	}{
 		// int cases

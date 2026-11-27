@@ -5,6 +5,7 @@
 package validation
 
 import (
+	"maps"
 	"context"
 	"errors"
 	"fmt"
@@ -26,7 +27,7 @@ type (
 
 	// FieldRules represents a rule set associated with a struct field.
 	FieldRules struct {
-		fieldPtr interface{}
+		fieldPtr any
 		rules    []Rule
 	}
 )
@@ -59,7 +60,7 @@ func (e ErrFieldNotFound) Error() string {
 //    // Value: the length must be between 5 and 10.
 //
 // An error will be returned if validation fails.
-func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
+func ValidateStruct(structPtr any, fields ...*FieldRules) error {
 	return ValidateStructWithContext(nil, structPtr, fields...)
 }
 
@@ -67,9 +68,9 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 // The only difference between ValidateStructWithContext and ValidateStruct is that the former will
 // validate struct fields with the provided context.
 // Please refer to ValidateStruct for the detailed instructions on how to use this function.
-func ValidateStructWithContext(ctx context.Context, structPtr interface{}, fields ...*FieldRules) error {
+func ValidateStructWithContext(ctx context.Context, structPtr any, fields ...*FieldRules) error {
 	value := reflect.ValueOf(structPtr)
-	if value.Kind() != reflect.Ptr || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
+	if value.Kind() != reflect.Pointer || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
 		// must be a pointer to a struct
 		return NewInternalError(ErrStructPointer)
 	}
@@ -83,7 +84,7 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 
 	for i, fr := range fields {
 		fv := reflect.ValueOf(fr.fieldPtr)
-		if fv.Kind() != reflect.Ptr {
+		if fv.Kind() != reflect.Pointer {
 			return NewInternalError(ErrFieldPointer(i))
 		}
 		ft := findStructField(value, fv)
@@ -103,9 +104,7 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 			if ft.Anonymous {
 				// merge errors from anonymous struct field
 				if es, ok := err.(Errors); ok {
-					for name, value := range es {
-						errs[name] = value
-					}
+					maps.Copy(errs, es)
 					continue
 				}
 			}
@@ -121,7 +120,7 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 
 // Field specifies a struct field and the corresponding validation rules.
 // The struct field must be specified as a pointer to it.
-func Field(fieldPtr interface{}, rules ...Rule) *FieldRules {
+func Field(fieldPtr any, rules ...Rule) *FieldRules {
 	return &FieldRules{
 		fieldPtr: fieldPtr,
 		rules:    rules,
@@ -145,7 +144,7 @@ func findStructField(structValue reflect.Value, fieldValue reflect.Value) *refle
 		if sf.Anonymous {
 			// delve into anonymous struct to look for the field
 			fi := structValue.Field(i)
-			if sf.Type.Kind() == reflect.Ptr {
+			if sf.Type.Kind() == reflect.Pointer {
 				fi = fi.Elem()
 			}
 			if fi.Kind() == reflect.Struct {

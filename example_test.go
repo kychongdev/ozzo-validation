@@ -135,7 +135,7 @@ type contextKey int
 
 func Example_six() {
 	key := contextKey(1)
-	rule := validation.WithContext(func(ctx context.Context, value interface{}) error {
+	rule := validation.WithContext(func(ctx context.Context, value any) error {
 		s, _ := value.(string)
 		if ctx.Value(key) == s {
 			return nil
@@ -156,10 +156,10 @@ func Example_six() {
 }
 
 func Example_seven() {
-	c := map[string]interface{}{
+	c := map[string]any{
 		"Name":  "Qiang Xue",
 		"Email": "q",
-		"Address": map[string]interface{}{
+		"Address": map[string]any{
 			"Street": "123",
 			"City":   "Unknown",
 			"State":  "Virginia",
